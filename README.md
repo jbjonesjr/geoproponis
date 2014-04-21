@@ -1,7 +1,7 @@
-geopartem
+geoporoponis
 =========
 
-GeoPartem (loosely translated from Latin as geo present) is a framework that builds presentations and briefings out of geospatial data.
+GeoProponis (loosely translated from Latin as "You present geospatially") is a framework that builds presentations and briefings out of geospatial data.
 
 As Web-baesd and Desktop mapping software has become more user friendly and available to more than just GIS experts, it is has made Geospatial analysts out of just about everyone.  However, when sharing information gleaned from this analyst, most people still rely on screen shots and hand-written overlays.
 
