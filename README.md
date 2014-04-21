@@ -18,3 +18,8 @@ WMS, TMS, Vector, GeoJSON and GML3.2
 Dissemenation:
 =========
 As a standalone command-line application, a rest-accessible tool, and *hopefully* packaged with tools like GeoServer.
+
+Name Derivation:
+=========
+Geo (greek): of or relating to the earth.
+Proponis (latin): 2nd person, singlular present indicative: You present
