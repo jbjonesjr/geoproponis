@@ -1,7 +1,7 @@
-package com.jbjonesjr.template;
+package com.geoproponis.parser.template;
 
 
-import com.jbjonesjr.OTPParser;
+import com.geoproponis.parser.OTPParser;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.Before;

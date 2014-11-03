@@ -1,4 +1,4 @@
-package com.jbjonesjr;
+package com.geoproponis.parser;
 
 import org.apache.log4j.Logger;
 import org.odftoolkit.simple.PresentationDocument;
@@ -16,7 +16,7 @@ import java.util.Iterator;
  * Time: 8:05 PM
  * To change this template use File | Settings | File Templates.
  */
-public class OTPParser {
+public class OTPParser implements Parser {
 
     private Logger logger = Logger.getLogger(OTPParser.class);
 
@@ -41,6 +41,7 @@ public class OTPParser {
         return null;
     }
 
+    @Override
     public int getSlideCount() {
         return pd.getSlideCount();
     }
@@ -49,34 +50,42 @@ public class OTPParser {
         return pd.getSlides();
     }
 
+    @Override
     public Boolean hasMapSlide() {
         return pd.getSlideByName("Map") != null;
     }
 
+    @Override
     public Slide getMapSlide() {
         return pd.getSlideByName("Map");
     }
 
+    @Override
     public Boolean hasMapAndLegendSlide() {
         return pd.getSlideByName("MapAndLegend") != null;
     }
 
+    @Override
     public Slide getMapAndLegendSlide() {
         return pd.getSlideByName("MapAndLegend");
     }
 
+    @Override
     public Boolean hasMapAndFeaturesSlide() {
         return pd.getSlideByName("MapAndFeatures") != null;
     }
 
+    @Override
     public Slide getMapAndFeaturesSlide() {
         return pd.getSlideByName("MapAndFeatures");
     }
 
+    @Override
     public Boolean hasMapAndFeaturesAndLegendSlide() {
         return pd.getSlideByName("MapAndFeaturesAndLegend") != null || pd.getSlideByName("MapAndLegendAndFeatures") != null;
     }
 
+    @Override
     public Slide getMapAndFeaturesAndLegendSlide() {
         if(pd.getSlideByName("MapAndFeaturesAndLegend") != null){
            return pd.getSlideByName("MapAndFeaturesAndLegend");
@@ -87,14 +96,17 @@ public class OTPParser {
         }
     }
 
+    @Override
     public Boolean hasFeaturesSlide() {
         return pd.getSlideByName("Features") != null;
     }
 
+    @Override
     public Slide getFeaturesSlide() {
         return pd.getSlideByName("Features") ;
     }
 
+    @Override
     public Boolean getMapElement(Slide s) {
         Iterator<Textbox> itr = s.getTextboxIterator();
         while (itr.hasNext()) {

@@ -1,4 +1,4 @@
-package com.jbjonesjr.template;
+package com.geoproponis.parser.template;
 
 import org.junit.Assert;
 import org.junit.Ignore;

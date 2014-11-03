@@ -1,13 +1,12 @@
-package com.jbjonesjr.template;
+package com.geoproponis.parser.template;
 
 
-import com.jbjonesjr.OTPParser;
+import com.geoproponis.parser.OTPParser;
 import org.apache.log4j.Logger;
 import org.junit.*;
 import org.odftoolkit.simple.draw.Textbox;
 import org.odftoolkit.simple.presentation.Slide;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Iterator;
 
