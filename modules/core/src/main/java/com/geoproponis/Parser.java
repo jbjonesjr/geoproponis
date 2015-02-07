@@ -1,4 +1,4 @@
-package com.geoproponis.parser;
+package com.geoproponis;
 
 import org.odftoolkit.simple.presentation.Slide;
 
