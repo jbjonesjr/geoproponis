@@ -34,7 +34,6 @@ public class OOSlide implements Slide {
 
     }
 
-
     public SlideElement getElement(SlideElementType set){
         return elems.get(set);
     }
