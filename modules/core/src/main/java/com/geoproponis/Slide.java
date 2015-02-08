@@ -9,16 +9,10 @@ package com.geoproponis;
  */
 public interface Slide {
 
-    public String getMap();
-
-    public Boolean Map();
-
-    public String getLegend();
-
-    public String getScale();
-
-    public String getFeatures();
+    public Object getSlide();
+    public SlideType getSlideType() ;
+    public boolean addElement(SlideElement se);
 
 
-
+    public SlideElement getElement(SlideElementType set);
 }

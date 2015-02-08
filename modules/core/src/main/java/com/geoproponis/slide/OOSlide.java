@@ -1,55 +1,41 @@
 package com.geoproponis.slide;
 
+import com.geoproponis.*;
 import com.geoproponis.Slide;
 import com.geoproponis.parser.OTPParser;
-import com.geoproponis.Parser;
 import org.odftoolkit.simple.draw.Textbox;
+import org.odftoolkit.simple.presentation.*;
 
 import java.io.FileInputStream;
-import java.util.Iterator;
+import java.util.*;
 
 
 public class OOSlide implements Slide {
-    protected Parser parser;
 
     private org.odftoolkit.simple.presentation.Slide slide;
-
-    public OOSlide(FileInputStream fis){
-        parser = new OTPParser();
-        ((OTPParser)parser).prepare(fis);
+    private SlideType st;
+    private Map<SlideElementType, SlideElement> elems = null;
+    public OOSlide(org.odftoolkit.simple.presentation.Slide ooslide, SlideType st){
+        this.slide = ooslide;
+        elems = new HashMap<SlideElementType, SlideElement>();
     }
 
-    @Override
-    public String getMap() {
-        slide = parser.getMapSlide();
-        Iterator<Textbox> tbitr = slide.getTextboxIterator();
-        while(tbitr.hasNext()){
-            if(tbitr.next().getTextContent().equalsIgnoreCase("Slide (Map and Features) By Name")){
-                return;
-            }
-        }
+    public Object getSlide() {
+        return slide;
+    }
 
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public SlideType getSlideType() {
+        return st;
+    }
+
+    public boolean addElement(SlideElement se){
+        elems.put(se.getType(),se);
+        return true;
 
     }
 
-    @Override
-    public Boolean Map() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
 
-    @Override
-    public String getLegend() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public String getScale() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public String getFeatures() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
+    public SlideElement getElement(SlideElementType set){
+        return elems.get(set);
     }
 }
