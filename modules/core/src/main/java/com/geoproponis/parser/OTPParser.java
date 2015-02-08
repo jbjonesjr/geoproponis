@@ -1,122 +1,235 @@
 package com.geoproponis.parser;
 
+import com.geoproponis.*;
+import com.geoproponis.slide.OOSlide;
 import org.apache.log4j.Logger;
 import org.odftoolkit.simple.PresentationDocument;
 import org.odftoolkit.simple.draw.Textbox;
 import org.odftoolkit.simple.presentation.Slide;
+import org.springframework.stereotype.Component;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
+import javax.annotation.PostConstruct;
+import java.io.File;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.util.*;
 
 
-/**
- * Created with IntelliJ IDEA.
- * User: jbjonesjr
- * Date: 5/29/14
- * Time: 8:05 PM
- * To change this template use File | Settings | File Templates.
- */
+@Component
 public class OTPParser implements Parser {
 
     private Logger logger = Logger.getLogger(OTPParser.class);
 
+    private List<PresentationFormat> validPresentationFormats = new ArrayList<PresentationFormat>();
     private PresentationDocument pd;
 
-    public Boolean prepare(String filename) {
+    public OTPParser(){
+        validPresentationFormats.add(PresentationFormat.ODTP);
+    }
+
+    public List<PresentationFormat> validPresentationFormats() {
+        return validPresentationFormats;
+    }
+
+    public Map<SlideType, com.geoproponis.Slide> process(String filename) throws Exception{
         try {
-            pd = PresentationDocument.loadDocument(filename);
+            this.pd = PresentationDocument.loadDocument(filename);
+            return processPresentationDocument(this.pd);
+
+
+        } catch (Exception e) {
+            logger.error("Problem loading Document via filename", e);
+        }
+        return null;
+    }
+
+    public Map<SlideType, com.geoproponis.Slide> process(File file) {
+        try {
+            this.pd = PresentationDocument.loadDocument(file);
+            return processPresentationDocument(this.pd);
         } catch (Exception e) {
             logger.error("Problem loading Document via file", e);
         }
         return null;
     }
 
-    public Boolean prepare(InputStream is) {
+    public Map<SlideType, com.geoproponis.Slide> process(InputStream is) {
         try {
-            pd = PresentationDocument.loadDocument(is);
+            this.pd = PresentationDocument.loadDocument(is);
             is.close();
+            return processPresentationDocument(this.pd);
         } catch (Exception e) {
             logger.error("Problem loading Document via stream", e);
         }
         return null;
     }
 
-    @Override
-    public int getSlideCount() {
+    public int getNativeSlideCount() {
         return pd.getSlideCount();
     }
 
-    private Iterator<Slide> getSlides() {
-        return pd.getSlides();
+
+    private SlideType getSlideType(Slide s) {
+        SlideType st = getSlideTypeByTitle(s);
+        if (st != null)
+            return st;
+        else
+            return getSlideTypeByElements(s);
     }
 
-    @Override
-    public Boolean hasMapSlide() {
-        return pd.getSlideByName("Map") != null;
-    }
-
-    @Override
-    public Slide getMapSlide() {
-        return pd.getSlideByName("Map");
-    }
-
-    @Override
-    public Boolean hasMapAndLegendSlide() {
-        return pd.getSlideByName("MapAndLegend") != null;
-    }
-
-    @Override
-    public Slide getMapAndLegendSlide() {
-        return pd.getSlideByName("MapAndLegend");
-    }
-
-    @Override
-    public Boolean hasMapAndFeaturesSlide() {
-        return pd.getSlideByName("MapAndFeatures") != null;
-    }
-
-    @Override
-    public Slide getMapAndFeaturesSlide() {
-        return pd.getSlideByName("MapAndFeatures");
-    }
-
-    @Override
-    public Boolean hasMapAndFeaturesAndLegendSlide() {
-        return pd.getSlideByName("MapAndFeaturesAndLegend") != null || pd.getSlideByName("MapAndLegendAndFeatures") != null;
-    }
-
-    @Override
-    public Slide getMapAndFeaturesAndLegendSlide() {
-        if(pd.getSlideByName("MapAndFeaturesAndLegend") != null){
-           return pd.getSlideByName("MapAndFeaturesAndLegend");
-        }else if(pd.getSlideByName("MapAndLegendAndFeatures") != null ){
-            return pd.getSlideByName("MapAndLegendAndFeatures");
-        }    else{
-            return null;
-        }
-    }
-
-    @Override
-    public Boolean hasFeaturesSlide() {
-        return pd.getSlideByName("Features") != null;
-    }
-
-    @Override
-    public Slide getFeaturesSlide() {
-        return pd.getSlideByName("Features") ;
-    }
-
-    @Override
-    public Boolean getMapElement(Slide s) {
-        Iterator<Textbox> itr = s.getTextboxIterator();
+    private Map<SlideType, com.geoproponis.Slide> processPresentationDocument(PresentationDocument pd) {
+        Map<SlideType, com.geoproponis.Slide> return_slides = new HashMap<SlideType, com.geoproponis.Slide>();
+        Iterator<Slide> itr = pd.getSlides();
         while (itr.hasNext()) {
-            Textbox tb = itr.next();
-            if (tb.getName().equalsIgnoreCase("Map") || tb.getTitle().equalsIgnoreCase("Map") || tb.getTextContent().equalsIgnoreCase("${MAP}$")) {
-                logger.info(tb.getName());
+            Slide s = itr.next();
+            SlideType st = this.getSlideType(s);
+            if (st != null) {
+                OOSlide geo_slide = new OOSlide(s, st);
+
+                Iterator<Textbox> tb_itr = s.getTextboxIterator();
+                while (tb_itr.hasNext()) {
+                    Textbox tb = tb_itr.next();
+                    SlideElement selm = this.getSlideElementByString(tb, tb.getTitle());
+                    if (selm == null) {
+                        selm = this.getSlideElementByString(tb, tb.getName());
+                        if (selm == null) {
+                            selm = this.getSlideElementByString(tb, tb.getTextContent().replaceAll("$", "").replaceAll("\\{", "").replaceAll("}", ""));
+                        }
+                    }
+                    if (selm != null) {
+                        geo_slide.addElement(selm);
+                    }
+
+                }
+                return_slides.put(st, geo_slide);
             }
         }
-        return null;
+
+        return return_slides;
     }
 
 
+    private SlideType getSlideTypeByTitle(Slide s) {
+        switch (s.getSlideName().toLowerCase()) {
+            case "map": {
+                return SlideType.MAP_SLIDE;
+            }
+            case "mapandlegend": {
+                return SlideType.MAPLEGEND_SLIDE;
+            }
+            case "mapandfeature":
+            case "mapandfeatures": {
+                return SlideType.MAPFEATURE_SLIDE;
+            }
+            case "mapandfeaturesandlegend":
+            case "mapandlegendandfeatures":
+            case "mapandfeatureandlegend":
+            case "mapandlegendandfeature": {
+                return SlideType.MAPFEATURELEGEND_SLIDE;
+            }
+            default:
+                return null;
+        }
+    }
+
+    private SlideType getSlideTypeByElements(Slide s) {
+        throw new NotImplementedException();
+    }
+
+
+    private SlideElement getSlideElementByString(Textbox tb, String genField) {
+        switch (genField) {
+            case "map": {
+                return new SlideElement(SlideElementType.MAP, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "legend": {
+                return new SlideElement(SlideElementType.LEGEND, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "feature":
+                return new SlideElement(SlideElementType.FEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "features": {
+                return new SlideElement(SlideElementType.FEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "selectedfeature":
+                return new SlideElement(SlideElementType.SELECTEDFEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "selectedfeatures":
+                return new SlideElement(SlideElementType.SELECTEDFEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            default:
+                return null;
+        }
+    }
+
+    private SlideElement _getSlideElementByTitle(Textbox tb) {
+        switch (tb.getTitle().toLowerCase()) {
+            case "map": {
+                return new SlideElement(SlideElementType.MAP, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "legend": {
+                return new SlideElement(SlideElementType.LEGEND, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "feature":
+                return new SlideElement(SlideElementType.FEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "features": {
+                return new SlideElement(SlideElementType.FEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "selectedfeature":
+                return new SlideElement(SlideElementType.SELECTEDFEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "selectedfeatures":
+                return new SlideElement(SlideElementType.SELECTEDFEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            default:
+                return null;
+        }
+    }
+
+    private SlideElement _getSlideElementByName(Textbox tb) {
+        switch (tb.getName().toLowerCase()) {
+            case "map": {
+                return new SlideElement(SlideElementType.MAP, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "legend": {
+                return new SlideElement(SlideElementType.LEGEND, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "feature":
+                return new SlideElement(SlideElementType.FEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "features": {
+                return new SlideElement(SlideElementType.FEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "selectedfeature":
+                return new SlideElement(SlideElementType.SELECTEDFEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "selectedfeatures":
+                return new SlideElement(SlideElementType.SELECTEDFEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            default:
+                return null;
+        }
+    }
+
+    private SlideElement _getSlideElementByTextContent(Textbox tb) {
+        switch (tb.getTextContent().toLowerCase()) {
+            case "${map}$": {
+                return new SlideElement(SlideElementType.MAP, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "${legend}$": {
+                return new SlideElement(SlideElementType.LEGEND, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "${feature}$":
+                return new SlideElement(SlideElementType.FEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "${features}$": {
+                return new SlideElement(SlideElementType.FEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            }
+            case "${selectedfeature}$":
+                return new SlideElement(SlideElementType.SELECTEDFEATURE, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+
+            case "${selectedfeatures}$":
+                return new SlideElement(SlideElementType.SELECTEDFEATURES, tb.getRectangle().getWidth(), tb.getRectangle().getHeight(), tb.getRectangle().getX(), tb.getRectangle().getY());
+            default:
+                return null;
+        }
+    }
 }

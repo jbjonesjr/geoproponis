@@ -1,36 +1,20 @@
 package com.geoproponis;
 
-import org.odftoolkit.simple.presentation.Slide;
+
+import java.util.List;
+import java.util.Map;
 
 /**
- * Created with IntelliJ IDEA.
- * User: jbjonesjr
- * Date: 10/13/14
- * Time: 6:12 PM
- * To change this template use File | Settings | File Templates.
+ * Usage:
+ * Instantiate the implementation.
+ * Call prepare passing in the template details (only required implementation is inputstream)
+ * Call process to generate the slides and geoproponis objects
+ *
  */
 public interface Parser {
-    int getSlideCount();
 
-    Boolean hasMapSlide();
+    List<PresentationFormat> validPresentationFormats();
 
-    Slide getMapSlide();
-
-    Boolean hasMapAndLegendSlide();
-
-    Slide getMapAndLegendSlide();
-
-    Boolean hasMapAndFeaturesSlide();
-
-    Slide getMapAndFeaturesSlide();
-
-    Boolean hasMapAndFeaturesAndLegendSlide();
-
-    Slide getMapAndFeaturesAndLegendSlide();
-
-    Boolean hasFeaturesSlide();
-
-    Slide getFeaturesSlide();
-
-    Boolean getMapElement(Slide s);
+    Map<SlideType, Slide>  process(String filename) throws Exception;
+    int getNativeSlideCount();
 }
