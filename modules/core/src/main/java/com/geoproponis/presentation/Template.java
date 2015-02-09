@@ -8,20 +8,12 @@ import java.io.File;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Created with IntelliJ IDEA.
- * User: jbjonesjr
- * Date: 1/24/15
- * Time: 4:14 PM
- * To change this template use File | Settings | File Templates.
- */
+
 public class Template {
 
    PresentationFormat format;
     File templateFile;
     Map<SlideType, Slide> slides;
-    Set<SlideType> types;
-
 
 
     public PresentationFormat getFormat() {
@@ -53,10 +45,13 @@ public class Template {
     }
 
     public Set<SlideType> getTypes() {
-        return types;
+        return this.slides.keySet();
     }
 
-    public void setTypes(Set<SlideType> types) {
-        this.types = types;
-    }
+   Slide getSlide(SlideType st){
+       if(slides.containsKey(st))
+       return slides.get(st);
+       else
+           return null;
+   }
 }

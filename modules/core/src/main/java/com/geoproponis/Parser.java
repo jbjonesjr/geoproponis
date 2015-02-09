@@ -1,6 +1,7 @@
 package com.geoproponis;
 
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,6 @@ public interface Parser {
 
     List<PresentationFormat> validPresentationFormats();
 
-    Map<SlideType, Slide>  process(String filename) throws Exception;
+    Map<SlideType, Slide>  process(File file) throws Exception;
     int getNativeSlideCount();
 }
